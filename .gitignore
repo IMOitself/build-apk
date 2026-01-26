@@ -86,3 +86,6 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# build files
+temp_build/
