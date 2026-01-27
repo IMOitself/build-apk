@@ -197,6 +197,9 @@
     <string name="project_path_menu_title">Projects Path</string>
     <string name="project_manager_null_projects">No Projects Found</string>
     <string name="project_manager_suggestions">Suggestions:\n\n  - Create New Project\n  - Change Projects Path</string>
+    <string name="action_export">Export project</string>
+    <string name="export_success">Project exported successfully.</string>
+    <string name="export_failed">Failed to export project: %1$s</string>
     
 
     <!-- Compiler Service -->

@@ -168,6 +168,11 @@ public class ProjectManagerFragment extends Fragment {
                                 .show();
                         return true;
                     });
+            menu.add(R.string.action_export)
+                    .setOnMenuItemClickListener(item -> {
+                        showExportDialog(project);
+                        return true;
+                    });
         });
         view.showContextMenu();
         return true;
@@ -368,6 +373,46 @@ public class ProjectManagerFragment extends Fragment {
                 empty.setVisibility(View.GONE);
             }
         }, 300);
+    }
+
+    private void showExportDialog(Project project) {
+        DialogProperties properties = new DialogProperties();
+        properties.selection_type = DialogConfigs.DIR_SELECT;
+        properties.selection_mode = DialogConfigs.SINGLE_MODE;
+        properties.root = Environment.getExternalStorageDirectory();
+        
+        FilePickerDialogFixed dialogFixed = new FilePickerDialogFixed(requireContext(), properties);
+        dialogFixed.setTitle(R.string.project_manager_save_location_title);
+        dialogFixed.setDialogSelectionListener(files -> {
+             exportProject(project, new File(files[0]));
+        });
+        dialogFixed.show();
+    }
+
+    private void exportProject(Project project, File destination) {
+        ProgressManager.getInstance().runNonCancelableAsync(() -> {
+             try {
+                 File projectDir = project.getRootFile();
+                 File destDir = new File(destination, projectDir.getName());
+                 FileUtils.copyDirectory(projectDir, destDir, false);
+                 
+                 if (getActivity() != null) {
+                     requireActivity().runOnUiThread(() -> 
+                         AndroidUtilities.showSimpleAlert(requireContext(), 
+                             getString(R.string.success), 
+                             getString(R.string.export_success))
+                     );
+                 }
+             } catch (IOException e) {
+                 if (getActivity() != null) {
+                     requireActivity().runOnUiThread(() -> 
+                         AndroidUtilities.showSimpleAlert(requireContext(), 
+                             getString(R.string.error), 
+                             getString(R.string.export_failed, e.getMessage()))
+                     );
+                 }
+             }
+        });
     }
 
     private void toggleLoading(boolean show) {
