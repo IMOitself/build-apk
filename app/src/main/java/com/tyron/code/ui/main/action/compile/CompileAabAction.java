@@ -18,8 +18,7 @@ public class CompileAabAction extends CompileAction {
 
     @Override
     public void actionPerformed(@NonNull AnActionEvent e) {
-        super.actionPerformed(e);
-        CompileCallback callback = e.getRequiredData(MainFragment.COMPILE_CALLBACK_KEY);
+        CompileCallback callback = e.getData(MainFragment.COMPILE_CALLBACK_KEY);
         callback.compile(BuildType.AAB);
     }
 

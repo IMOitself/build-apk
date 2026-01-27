@@ -6,22 +6,27 @@ import androidx.annotation.Nullable;
 
 import com.tyron.builder.project.Project;
 import com.tyron.builder.project.api.AndroidModule;
+import com.tyron.builder.project.api.KotlinModule;
 import com.tyron.builder.project.api.Module;
 import com.tyron.code.ApplicationLoader;
 import com.tyron.code.language.AbstractAutoCompleteProvider;
 import com.tyron.code.ui.project.ProjectManager;
 import com.tyron.common.SharedPreferenceKeys;
-import com.tyron.completion.java.provider.JavaSortCategory;
-import com.tyron.completion.model.CompletionItem;
 import com.tyron.completion.model.CompletionList;
-import com.tyron.completion.util.CompletionUtils;
 import com.tyron.editor.Editor;
-import com.tyron.kotlin.completion.KotlinEnvironment;
-import com.tyron.kotlin.completion.KotlinFile;
+import com.tyron.kotlin.completion.core.model.KotlinEnvironment;
+import com.tyron.kotlin.completion.core.resolve.AnalysisResultWithProvider;
+import com.tyron.kotlin.completion.core.resolve.KotlinAnalyzer;
+import com.tyron.kotlin_completion.CompletionEngine;
 
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
+import org.jetbrains.kotlin.com.intellij.openapi.components.ServiceManager;
+import org.jetbrains.kotlin.com.intellij.psi.PsiFile;
+import org.jetbrains.kotlin.com.intellij.psi.PsiManager;
+import org.jetbrains.kotlin.psi.KtFile;
+import org.jetbrains.kotlin.resolve.jvm.KotlinCliJavaFileManager;
 
-import java.util.List;
+import java.util.Objects;
 
 public class KotlinAutoCompleteProvider extends AbstractAutoCompleteProvider {
 
@@ -52,7 +57,8 @@ public class KotlinAutoCompleteProvider extends AbstractAutoCompleteProvider {
             return null;
         }
 
-        Project project = ProjectManager.getInstance().getCurrentProject();
+        Project project = ProjectManager.getInstance()
+                .getCurrentProject();
         if (project == null) {
             return null;
         }
@@ -63,23 +69,26 @@ public class KotlinAutoCompleteProvider extends AbstractAutoCompleteProvider {
             return null;
         }
 
-        KotlinEnvironment kotlinEnvironment = KotlinEnvironment.Companion.get(currentModule);
-        if (kotlinEnvironment == null) {
+        if (environment == null) {
+            environment = KotlinEnvironment.getEnvironment((KotlinModule) currentModule);
+        }
+
+        if (mEditor.getCurrentFile() == null) {
             return null;
         }
 
-        KotlinFile updatedFile =
-                kotlinEnvironment.updateKotlinFile(mEditor.getCurrentFile().getAbsolutePath(),
-                        mEditor.getContent().toString());
-        List<CompletionItem> itemList = kotlinEnvironment.complete(updatedFile,
-                line,
-                column - 1);
+        CompletionEngine engine = CompletionEngine.getInstance((AndroidModule) currentModule);
 
-        for (CompletionItem completionItem : itemList) {
-            completionItem.addFilterText(completionItem.commitText);
-            completionItem.setSortText(JavaSortCategory.DIRECT_MEMBER.toString());
+        if (engine.isIndexing()) {
+            return null;
         }
 
-        return CompletionList.builder(prefix).addItems(itemList).build();
+        // waiting for code editor to support async code completions
+        return engine.complete(mEditor.getCurrentFile(),
+                String.valueOf(mEditor.getContent()),
+                prefix,
+                line,
+                column,
+                mEditor.getCaret().getStart());
     }
 }

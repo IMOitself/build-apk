@@ -1,5 +1,7 @@
 package com.tyron.builder.compiler.manifest;
 
+
+
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +65,7 @@ public class MergingReport {
 
         if (!mResult.isSuccess()) {
             logger.warning("\nSee http://g.co/androidstudio/manifest-merger for more information"
-                           + " about the manifest merger.\n");
+                    + " about the manifest merger.\n");
         }
     }
 
@@ -172,10 +174,10 @@ public class MergingReport {
         @Override
         public String toString() {
             return mSourceLocation.toString() // needs short string.
-                   + " "
-                   + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, mSeverity.toString())
-                   + ":\n\t"
-                   + mLog;
+                    + " "
+                    + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, mSeverity.toString())
+                    + ":\n\t"
+                    + mLog;
         }
     }
 

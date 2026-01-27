@@ -41,7 +41,6 @@ import androidx.annotation.Nullable;
 import com.google.common.collect.ImmutableSet;
 import com.tyron.completion.java.action.FindCurrentPath;
 import com.tyron.completion.java.compiler.CompileTask;
-import com.tyron.completion.java.provider.JavacUtilitiesProvider;
 import com.tyron.completion.java.rewrite.EditHelper;
 
 import javax.lang.model.SourceVersion;
@@ -353,12 +352,12 @@ public class ActionUtil {
         return className;
     }
 
-    public static boolean containsVariableAtScope(String name, long position, JavacUtilitiesProvider parse) {
-        TreePath scan = new FindCurrentPath(parse.getTrees()).scan(parse.root(), position + 1);
+    public static boolean containsVariableAtScope(String name, long position, CompileTask parse) {
+        TreePath scan = new FindCurrentPath(parse.task).scan(parse.root(), position + 1);
         if (scan == null) {
             return false;
         }
-        Scope scope = parse.getTrees().getScope(scan);
+        Scope scope = Trees.instance(parse.task).getScope(scan);
         Iterable<? extends Element> localElements = scope.getLocalElements();
         for (Element element : localElements) {
             if (name.contentEquals(element.getSimpleName())) {
@@ -368,8 +367,8 @@ public class ActionUtil {
         return false;
     }
 
-    public static boolean containsVariableAtScope(String name, JavacUtilitiesProvider parse, TreePath path) {
-        Scope scope = parse.getTrees().getScope(path);
+    public static boolean containsVariableAtScope(String name, CompileTask parse, TreePath path) {
+        Scope scope = Trees.instance(parse.task).getScope(path);
         Iterable<? extends Element> localElements = scope.getLocalElements();
         for (Element element : localElements) {
             if (element.getKind() != ElementKind.LOCAL_VARIABLE &&

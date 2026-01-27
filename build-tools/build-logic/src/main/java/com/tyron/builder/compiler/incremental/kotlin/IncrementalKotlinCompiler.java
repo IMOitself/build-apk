@@ -33,8 +33,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import dalvik.system.DexFile;
 import kotlin.jvm.functions.Function0;
 
 public class IncrementalKotlinCompiler extends Task<AndroidModule> {
@@ -97,7 +99,6 @@ public class IncrementalKotlinCompiler extends Task<AndroidModule> {
             compiler.parseArguments(arguments.toArray(new String[0]), args);
 
             args.setUseJavac(false);
-            args.setUseFastJarFileSystem(true);
             args.setCompileJava(false);
             args.setIncludeRuntime(false);
             args.setNoJdk(true);
@@ -126,16 +127,19 @@ public class IncrementalKotlinCompiler extends Task<AndroidModule> {
                             new File(getModule().getBuildDirectory(), "gen")),
                     args, mCollector, new ICReporterBase() {
                         @Override
-                        public void reportCompileIteration(boolean b,
-                                                           @NotNull Collection<? extends File> collection,
-                                                           @NotNull ExitCode exitCode) {
-
+                        public void report(@NonNull Function0<String> function0) {
+                            getLogger().info(function0.invoke());
                         }
 
                         @Override
-                        public void report(@NotNull Function0<String> function0,
-                                           @NotNull ReportSeverity reportSeverity) {
+                        public void reportVerbose(@NonNull Function0<String> function0) {
+                            getLogger().verbose(function0.invoke());
+                        }
 
+                        @Override
+                        public void reportCompileIteration(boolean incremental,
+                                                           @NonNull Collection<? extends File> sources,
+                                                           @NonNull ExitCode exitCode) {
                         }
                     });
         } catch (Exception e) {

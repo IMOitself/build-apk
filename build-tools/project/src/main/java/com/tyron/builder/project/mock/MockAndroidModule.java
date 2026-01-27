@@ -88,7 +88,7 @@ public class MockAndroidModule extends MockJavaModule implements AndroidModule {
         }
 
         if (mManifestData == null) {
-            return null;
+            throw new IllegalStateException("Project is not yet opened");
         }
         return mManifestData.getPackage();
     }

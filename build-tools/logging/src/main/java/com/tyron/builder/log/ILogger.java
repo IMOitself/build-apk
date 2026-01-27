@@ -26,11 +26,6 @@ public interface ILogger {
         public void error(DiagnosticWrapper wrapper) {
             System.out.println("[ERROR] " + wrapper.toString());
         }
-
-        @Override
-        public void quiet(String s) {
-
-        }
     };
 
     ILogger EMPTY = new ILogger() {
@@ -51,11 +46,6 @@ public interface ILogger {
 
         @Override
         public void error(DiagnosticWrapper wrapper) {
-
-        }
-
-        @Override
-        public void quiet(String s) {
 
         }
     };
@@ -81,11 +71,6 @@ public interface ILogger {
             public void error(DiagnosticWrapper wrapper) {
                 logViewModel.e(LogViewModel.BUILD_LOG, wrapper);
             }
-
-            @Override
-            public void quiet(String s) {
-
-            }
         };
     }
     void info(DiagnosticWrapper wrapper);
@@ -102,25 +87,11 @@ public interface ILogger {
         debug(wrap(message));
     }
 
-    default void info(CharSequence message) {
-        debug(wrap(message));
-    }
-
     default void debug(String message) {
         debug(wrap(message));
     }
 
-    default void debug(CharSequence message) {
-        debug(wrap(message));
-    }
-
     default void warning(String message) {
-        DiagnosticWrapper wrapped = wrap(message);
-        wrapped.setKind(Diagnostic.Kind.WARNING);
-        warning(wrapped);
-    }
-
-    default void warning(CharSequence message) {
         DiagnosticWrapper wrapped = wrap(message);
         wrapped.setKind(Diagnostic.Kind.WARNING);
         warning(wrapped);
@@ -132,24 +103,13 @@ public interface ILogger {
        error(wrapped);
     }
 
-    default void error(CharSequence message) {
-        DiagnosticWrapper wrapped = wrap(message);
-        wrapped.setKind(Diagnostic.Kind.ERROR);
-        error(wrapped);
-    }
-
-
     default void verbose(String message) {
 
     }
 
-    static DiagnosticWrapper wrap(CharSequence message) {
+    static DiagnosticWrapper wrap(String message) {
         DiagnosticWrapper wrapper = new DiagnosticWrapper();
         wrapper.setMessage(message);
         return wrapper;
     }
-
-    default void quiet(String message) {
-        debug(message);
-    };
 }

@@ -39,11 +39,11 @@ public class MemberReferenceCompletionProvider extends BaseCompletionProvider {
     }
 
     @Override
-    public void complete(CompletionList.Builder builder, JavacUtilitiesProvider task, TreePath path,
+    public void complete(CompletionList.Builder builder, CompileTask task, TreePath path,
                          String partial, boolean endsWithParen) {
         checkCanceled();
 
-        Trees trees = task.getTrees();
+        Trees trees = Trees.instance(task.task);
         MemberReferenceTree select = (MemberReferenceTree) path.getLeaf();
         path = new TreePath(path, select.getQualifierExpression());
         Element element = trees.getElement(path);
@@ -69,7 +69,7 @@ public class MemberReferenceCompletionProvider extends BaseCompletionProvider {
     }
 
     private void completeTypeVariableMemberReference(CompletionList.Builder builder,
-                                                     JavacUtilitiesProvider task, Scope scope,
+                                                     CompileTask task, Scope scope,
                                                      TypeVariable type, boolean isStatic,
                                                      String partial) {
         if (type.getUpperBound() instanceof DeclaredType) {
@@ -84,14 +84,14 @@ public class MemberReferenceCompletionProvider extends BaseCompletionProvider {
     }
 
     private void completeDeclaredTypeMemberReference(CompletionList.Builder builder,
-                                                     JavacUtilitiesProvider task, Scope scope,
+                                                     CompileTask task, Scope scope,
                                                      DeclaredType type, boolean isStatic,
                                                      String partial) {
         checkCanceled();
 
-        Trees trees = task.getTrees();
+        Trees trees = Trees.instance(task.task);
         TypeElement typeElement = (TypeElement) type.asElement();
-        for (Element member : task.getElements().getAllMembers(typeElement)) {
+        for (Element member : task.task.getElements().getAllMembers(typeElement)) {
             if (FuzzySearch.partialRatio(String.valueOf(member.getSimpleName()), partial) < 70) {
                 continue;
             }

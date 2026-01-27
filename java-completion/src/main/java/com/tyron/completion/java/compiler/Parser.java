@@ -84,7 +84,8 @@ public class Parser {
     private static boolean needsParse(JavaFileObject file) {
         if (cachedParse == null) return true;
         if (!cachedParse.file.equals(file)) return true;
-        return file.getLastModified() > cachedModified;
+        if (file.getLastModified() > cachedModified) return true;
+        return false;
     }
 
     private static void loadParse(Project project, JavaFileObject file) {

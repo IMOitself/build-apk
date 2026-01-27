@@ -65,7 +65,11 @@ public abstract class CompletionBase {
 
     protected CompletionList complete(File file, String contents, long cursor) {
         try {
-            throw new UnsupportedOperationException();
+            return mCompletionEngine.complete(mProject,
+                    mModule,
+                    file,
+                    contents,
+                    cursor).build();
         } catch (Throwable e) {
             throw e;
         }

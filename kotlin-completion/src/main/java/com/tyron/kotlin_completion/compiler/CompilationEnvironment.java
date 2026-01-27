@@ -1,8 +1,12 @@
 package com.tyron.kotlin_completion.compiler;
 
 import com.tyron.builder.project.api.KotlinModule;
-import com.tyron.kotlin.completion.KotlinEnvironment;
+import com.tyron.kotlin.completion.core.model.KotlinEnvironment;
+import com.tyron.kotlin.completion.core.resolve.CodeAssistAnalyzerFacadeForJVM;
+import com.tyron.kotlin.completion.core.resolve.InjectionKt;
+import com.tyron.kotlin.completion.core.resolve.KotlinPackagePartProvider;
 
+import org.jetbrains.kotlin.builtins.jvm.JvmBuiltIns;
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys;
 import org.jetbrains.kotlin.cli.common.environment.UtilKt;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
@@ -70,7 +74,7 @@ public class CompilationEnvironment implements Closeable {
 
         UtilKt.setIdeaIoUseFallback();
 
-        mEnvironment = KotlinEnvironment.Companion.get(module).getKotlinEnvironment();
+        mEnvironment = KotlinEnvironment.getEnvironment(module);
         updateConfig(mEnvironment.getConfiguration());
 
         mParser = new KtPsiFactory(mEnvironment.getProject());
@@ -110,7 +114,14 @@ public class CompilationEnvironment implements Closeable {
     }
 
     public Pair<ComponentProvider, BindingTraceContext> createContainer(Collection<KtFile> filesToAnalyze, Collection<KtFile> sourcePath) {
-        throw new UnsupportedOperationException();
+        CliBindingTrace trace = new CliBindingTrace();
+        MutableModuleContext moduleContext = CodeAssistAnalyzerFacadeForJVM
+                .createModuleContext(getEnvironment().getProject(),
+                                     getEnvironment().getConfiguration(), true);
+        ComponentProvider container = CodeAssistAnalyzerFacadeForJVM.INSTANCE
+                .createContainer(trace, moduleContext, filesToAnalyze, sourcePath, getEnvironment(),
+                                 mModule, JvmTarget.JVM_1_8);
+        return new Pair<>(container, trace);
     }
 
     public void updateConfiguration(CompilerConfiguration config) {

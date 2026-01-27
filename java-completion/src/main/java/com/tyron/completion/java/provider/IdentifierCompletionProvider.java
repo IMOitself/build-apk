@@ -25,7 +25,7 @@ public class IdentifierCompletionProvider extends BaseCompletionProvider {
 
     @Override
     public void complete(CompletionList.Builder builder,
-                         JavacUtilitiesProvider task,
+                         CompileTask task,
                          TreePath path,
                          String partial,
                          boolean endsWithParen) {
@@ -47,8 +47,7 @@ public class IdentifierCompletionProvider extends BaseCompletionProvider {
         if (!builder.isIncomplete()) {
             if (!caseSensitiveMatch ||
                 partial.length() > 0 && Character.isUpperCase(partial.charAt(0))) {
-                addClassNames(path.getCompilationUnit(), partial, builder, task,
-                        caseSensitiveMatch);
+                addClassNames(path.getCompilationUnit(), partial, builder, getCompiler(), caseSensitiveMatch);
             }
         }
 

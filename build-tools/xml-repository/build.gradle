@@ -3,8 +3,8 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
@@ -12,8 +12,6 @@ dependencies {
     implementation project(path: ':build-tools:manifmerger')
 
     api files('libs/org.eclipse.lemminx-0.11.0-uber.jar')
-    implementation 'xerces:xercesImpl:2.12.2'
-    implementation common.commonsLang3
     implementation project(path: ':build-tools:project')
 
     compileOnly project(path: ':android-stubs')

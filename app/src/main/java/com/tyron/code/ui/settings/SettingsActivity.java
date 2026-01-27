@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -11,8 +12,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.google.android.material.transition.MaterialSharedAxis;
 import com.tyron.code.R;
-import com.tyron.code.ui.settings.dynamic.DynamicSettingsFragment;
 
 public class SettingsActivity extends AppCompatActivity implements
         PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -26,7 +27,7 @@ public class SettingsActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.settings, new DynamicSettingsFragment())
+                    .replace(R.id.settings, new SettingsFragment())
                     .commit();
         } else {
             setTitle(savedInstanceState.getCharSequence(TITLE_TAG));

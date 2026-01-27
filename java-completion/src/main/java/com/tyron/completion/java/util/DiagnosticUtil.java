@@ -3,7 +3,6 @@ package com.tyron.completion.java.util;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.sun.tools.javac.util.JCDiagnostic;
 import com.tyron.builder.model.DiagnosticWrapper;
 import com.tyron.completion.java.action.FindMethodDeclarationAt;
 import com.tyron.completion.java.compiler.CompileTask;
@@ -107,16 +106,6 @@ public class DiagnosticUtil {
             extends JavaFileObject>> diagnostics,
                                                                      long cursor) {
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
-            if (diagnostic.getStartPosition() <= cursor && cursor < diagnostic.getEndPosition()) {
-                return diagnostic;
-            }
-        }
-        return null;
-    }
-
-    public static JCDiagnostic getJCDiagnostic(List<JCDiagnostic> diagnostics,
-                                             long cursor) {
-        for (JCDiagnostic diagnostic : diagnostics) {
             if (diagnostic.getStartPosition() <= cursor && cursor < diagnostic.getEndPosition()) {
                 return diagnostic;
             }

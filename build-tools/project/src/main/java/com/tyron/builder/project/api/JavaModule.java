@@ -3,7 +3,7 @@ package com.tyron.builder.project.api;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.tyron.builder.model.CodeAssistLibrary;
+import com.tyron.builder.model.Library;
 import com.tyron.builder.project.util.PackageTrie;
 
 import java.io.File;
@@ -27,12 +27,12 @@ public interface JavaModule extends Module {
 
     List<File> getLibraries();
 
-    void addLibrary(@NonNull CodeAssistLibrary jar);
+    void addLibrary(@NonNull File jar);
 
     /**
      * Sets the map of md5 hash to its library source
      */
-    void putLibraryHashes(Map<String, CodeAssistLibrary> hashes);
+    void putLibraryHashes(Map<String, Library> hashes);
 
     /**
      *
@@ -40,7 +40,7 @@ public interface JavaModule extends Module {
      * @return The library object for its hash
      */
     @Nullable
-    CodeAssistLibrary getLibrary(String hash);
+    Library getLibrary(String hash);
 
     /**
      * @return The fully qualified name of all classes in this projects including its

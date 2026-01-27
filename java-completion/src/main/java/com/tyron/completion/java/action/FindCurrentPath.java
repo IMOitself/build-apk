@@ -2,7 +2,6 @@ package com.tyron.completion.java.action;
 
 import android.util.Pair;
 
-import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.CaseTree;
 import com.sun.source.tree.ClassTree;
@@ -37,15 +36,13 @@ import java.util.List;
  */
 public class FindCurrentPath extends TreePathScanner<TreePath, Pair<Long, Long>> {
 
+    private final JavacTask task;
     private final SourcePositions mPos;
     private CompilationUnitTree mCompilationUnit;
 
     public FindCurrentPath(JavacTask task) {
+        this.task = task;
         mPos = Trees.instance(task).getSourcePositions();
-    }
-
-    public FindCurrentPath(Trees trees) {
-        mPos = trees.getSourcePositions();
     }
 
     public TreePath scan(Tree tree, long start) {
@@ -272,20 +269,6 @@ public class FindCurrentPath extends TreePathScanner<TreePath, Pair<Long, Long>>
                 return scan;
             }
         }
-        return null;
-    }
-
-    @Override
-    public TreePath visitAssignment(AssignmentTree node, Pair<Long, Long> longLongPair) {
-        TreePath smaller = super.visitAssignment(node, longLongPair);
-        if (smaller != null) {
-            return smaller;
-        }
-
-        if (isInside(node, longLongPair)) {
-            return getCurrentPath();
-        }
-
         return null;
     }
 

@@ -16,21 +16,17 @@ import com.tyron.builder.log.LogViewModel;
 import com.tyron.builder.model.DiagnosticWrapper;
 import com.tyron.builder.project.Project;
 import com.tyron.code.ui.editor.impl.FileEditorManagerImpl;
+import com.tyron.code.ui.editor.impl.text.rosemoe.CodeEditorFragment;
 import com.tyron.code.ui.editor.log.adapter.LogAdapter;
 import com.tyron.code.ui.main.MainViewModel;
 import com.tyron.code.ui.project.ProjectManager;
-import com.tyron.common.util.AndroidUtilities;
-import com.tyron.common.util.ShareUtils;
 import com.tyron.fileeditor.api.FileEditorManager;
-import com.tyron.terminal.TerminalSession;
-import com.tyron.terminal.TerminalSessionClientAdapter;
-import com.tyron.terminal.view.TerminalView;
-import com.tyron.terminal.view.TerminalViewClientAdapter;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class AppLogFragment extends Fragment
         implements ProjectManager.OnProjectOpenListener {
@@ -51,10 +47,6 @@ public class AppLogFragment extends Fragment
     private LogViewModel mModel;
     private LogAdapter mAdapter;
     private RecyclerView mRecyclerView;
-    private TerminalView mTerminalView;
-
-    public static OutputStream outputStream;
-    public static OutputStream errorOutputStream;
 
     public AppLogFragment() {
 
@@ -73,55 +65,21 @@ public class AppLogFragment extends Fragment
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         FrameLayout mRoot = new FrameLayout(requireContext());
 
-        if (id == LogViewModel.BUILD_LOG) {
-            TerminalSession session = new TerminalSession("", "", new String[0], new String[0],
-                    0, new TerminalSessionClientAdapter() {
-                @Override
-                public void onCopyTextToClipboard(TerminalSession session, String text) {
-                    AndroidUtilities.copyToClipboard(text);
-                }
-
-                @Override
-                public void onShareText(TerminalSession terminalSession, String transcriptText) {
-                    ShareUtils.shareText(requireContext(), "Build Logs", transcriptText);
-                }
-            });
-
-            mTerminalView = new TerminalView(requireContext(), null);
-            mTerminalView.setTextSize(20);
-            mTerminalView.setTerminalViewClient(new TerminalViewClientAdapter(mTerminalView));
-            mTerminalView.attachSession(session);
-
-            outputStream = new OutputStream() {
-                @Override
-                public void write(int b) throws IOException {
-                    write(new byte[]{(byte) b}, 0, 1);
-                }
-
-                @Override
-                public void write(byte[] b, int off, int len) throws IOException {
-                    mTerminalView.mEmulator.append(b, off + len);
-                    mTerminalView.postInvalidate();
-                }
-            };
-
-            mRoot.addView(mTerminalView, new ViewGroup.LayoutParams(-1, -1));
-            return mRoot;
-        }
         mAdapter = new LogAdapter();
         mAdapter.setListener(diagnostic -> {
             if (diagnostic.getSource() != null) {
                 if (getContext() != null) {
                     FileEditorManager manager = FileEditorManagerImpl.getInstance();
                     manager.openFile(requireContext(), diagnostic.getSource(), it -> {
-//                        if (diagnostic.getLineNumber() > 0 && diagnostic.getColumnNumber() > 0) {
-//                            Bundle bundle = new Bundle(it.getFragment()
-//                                                               .getArguments());
-//                            bundle.putInt(CodeEditorFragment.KEY_LINE, (int) diagnostic.getLineNumber());
-//                            bundle.putInt(CodeEditorFragment.KEY_COLUMN, (int) diagnostic.getColumnNumber());
-//                            it.getFragment().setArguments(bundle);
-//                            manager.openFileEditor(it);
-//                        }
+                        if (diagnostic.getLineNumber() > 0 && diagnostic.getColumnNumber() > 0) {
+                            Bundle bundle = new Bundle(it.getFragment()
+                                                               .getArguments());
+                            bundle.putInt(CodeEditorFragment.KEY_LINE, (int) diagnostic.getLineNumber());
+                            bundle.putInt(CodeEditorFragment.KEY_COLUMN, (int) diagnostic.getColumnNumber());
+                            it.getFragment()
+                                    .setArguments(bundle);
+                            manager.openFileEditor(it);
+                        }
                     });
                 }
             }
@@ -131,7 +89,6 @@ public class AppLogFragment extends Fragment
         mRecyclerView.setAdapter(mAdapter);
         mRoot.addView(mRecyclerView,
                 new FrameLayout.LayoutParams(-1, -1));
-
         return mRoot;
     }
 
@@ -139,17 +96,6 @@ public class AppLogFragment extends Fragment
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (id == LogViewModel.BUILD_LOG) {
-            mModel.getLogs(id).observe(getViewLifecycleOwner(), diagnosticWrappers -> {
-                if (diagnosticWrappers.isEmpty()) {
-                    if (mTerminalView.mEmulator != null && mTerminalView.mEmulator.getScreen() != null) {
-                        mTerminalView.mEmulator.clearTranscript();
-                        mTerminalView.invalidate();
-                    }
-                }
-            });
-            return;
-        }
         mModel.getLogs(id).observe(getViewLifecycleOwner(), this::process);
     }
 

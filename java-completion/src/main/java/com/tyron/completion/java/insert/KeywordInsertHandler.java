@@ -3,7 +3,6 @@ package com.tyron.completion.java.insert;
 import com.tyron.completion.DefaultInsertHandler;
 import com.tyron.completion.java.compiler.CompileTask;
 import com.tyron.completion.java.compiler.JavaCompilerService;
-import com.tyron.completion.java.provider.JavacUtilitiesProvider;
 import com.tyron.completion.java.util.TreeUtil;
 import com.tyron.completion.model.CompletionItem;
 import com.tyron.editor.Caret;
@@ -18,10 +17,10 @@ import com.sun.source.util.Trees;
 
 public class KeywordInsertHandler extends DefaultInsertHandler {
 
-    private final JavacUtilitiesProvider task;
+    private final CompileTask task;
     private final TreePath currentPath;
 
-    public KeywordInsertHandler(JavacUtilitiesProvider task, TreePath currentPath, CompletionItem item) {
+    public KeywordInsertHandler(CompileTask task, TreePath currentPath, CompletionItem item) {
         super(item);
         this.task = task;
         this.currentPath = currentPath;

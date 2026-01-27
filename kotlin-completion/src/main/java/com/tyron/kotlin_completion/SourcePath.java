@@ -16,8 +16,6 @@ import org.jetbrains.kotlin.descriptors.ModuleDescriptor;
 import org.jetbrains.kotlin.idea.KotlinLanguage;
 import org.jetbrains.kotlin.psi.KtFile;
 import org.jetbrains.kotlin.resolve.BindingContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +38,6 @@ import kotlin.Pair;
 public class SourcePath {
 
     private static final String TAG = "SourcePath";
-    private static final Logger LOG = LoggerFactory.getLogger(SourcePath.class);
 
     private final CompilerClassPath cp;
     private final Map<URI, SourceFile> files = new HashMap<>();
@@ -117,13 +114,13 @@ public class SourcePath {
         }
 
         public void parse() {
-            LOG.debug("Parsing file " + path);
+            Log.d(TAG, "Parsing file " + path);
             parsed = cp.getCompiler().createKtFile(content, (path == null ? Paths.get("sourceFile.virtual" + extension) : path), kind);
         }
 
         public void parseIfChanged() {
             if (parsed == null || !content.equals(parsed.getText())) {
-                LOG.debug("Parse has changed, parsing.");
+                Log.d(TAG, "Parse has changed, parsing.");
                 parse();
             }
         }
@@ -191,9 +188,9 @@ public class SourcePath {
     public void put(File file, String content, boolean temp) {
         assert !content.contains("\r");
 
-        LOG.debug("Putting contents of " + file.getName());
+        Log.d(TAG, "Putting contents of " + file.getName());
         if (temp) {
-            LOG.debug("Adding temporary file");
+            Log.d(TAG, "Adding temporary file");
         }
 
         if (files.containsKey(file.toURI())) {
@@ -283,6 +280,7 @@ public class SourcePath {
             String string;
             try {
                 string = FileUtils.readFileToString(file, Charset.defaultCharset());
+                Log.d("STRING", string);
             } catch (IOException e) {
                 string = "";
             }

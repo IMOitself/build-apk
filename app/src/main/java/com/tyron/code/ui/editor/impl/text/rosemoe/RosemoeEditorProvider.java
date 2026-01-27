@@ -1,7 +1,5 @@
 package com.tyron.code.ui.editor.impl.text.rosemoe;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.google.common.collect.ImmutableSet;
@@ -34,8 +32,8 @@ public class RosemoeEditorProvider implements FileEditorProvider {
 
     @NonNull
     @Override
-    public FileEditor createEditor(@NonNull Context context, @NonNull File file) {
-        return new RosemoeCodeEditor(context, file, this);
+    public FileEditor createEditor(@NonNull File file) {
+        return new RosemoeCodeEditor(file, this);
     }
 
     @NonNull

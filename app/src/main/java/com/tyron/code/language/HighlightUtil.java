@@ -45,6 +45,7 @@ public class HighlightUtil {
                             nSpan.column = regionEndInSpan;
                             spans.add(i + 1, nSpan);
                         }
+                        span.problemFlags = newSpan.problemFlags;
                         span.underlineColor = newSpan.underlineColor;
                         span.style = newSpan.style;
                         span.renderer = newSpan.renderer;
@@ -55,6 +56,7 @@ public class HighlightUtil {
                             io.github.rosemoe.sora.lang.styling.Span nSpan = span.copy();
                             nSpan.column = regionStartInSpan;
                             spans.add(i + 1, nSpan);
+                            span.problemFlags = newSpan.problemFlags;
                             span.underlineColor = newSpan.underlineColor;
                             span.style = newSpan.style;
                             span.renderer = newSpan.renderer;
@@ -62,6 +64,7 @@ public class HighlightUtil {
                             increment = 3;
                             io.github.rosemoe.sora.lang.styling.Span span1 = span.copy();
                             span1.column = regionStartInSpan;
+                            span1.problemFlags = newSpan.problemFlags;
                             span1.underlineColor = newSpan.underlineColor;
                             span1.style = newSpan.style;
                             span1.renderer = newSpan.renderer;
@@ -105,6 +108,7 @@ public class HighlightUtil {
                             nSpan.column = regionEndInSpan;
                             spans.add(i + 1, nSpan);
                         }
+                        span.problemFlags |= newFlag;
                     } else {
                         //regionStartInSpan > span.column
                         if (regionEndInSpan == spanEnd) {
@@ -112,10 +116,12 @@ public class HighlightUtil {
                             io.github.rosemoe.sora.lang.styling.Span nSpan = span.copy();
                             nSpan.column = regionStartInSpan;
                             spans.add(i + 1, nSpan);
+                            nSpan.problemFlags |= newFlag;
                         } else {
                             increment = 3;
                             io.github.rosemoe.sora.lang.styling.Span span1 = span.copy();
                             span1.column = regionStartInSpan;
+                            span1.problemFlags |= newFlag;
                             io.github.rosemoe.sora.lang.styling.Span span2 = span.copy();
                             span2.column = regionEndInSpan;
                             spans.add(i + 1, span1);
@@ -152,13 +158,6 @@ public class HighlightUtil {
                     if (it.getEndPosition() == -1) {
                         it.setEndPosition(it.getPosition());
                     }
-
-                    if (it.getStartPosition() > editor.getContent().length()) {
-                        return;
-                    }
-                    if (it.getEndPosition() > editor.getContent().length()) {
-                        return;
-                    }
                     CharPosition start = editor.getCharPosition((int) it.getStartPosition());
                     CharPosition end = editor.getCharPosition((int) it.getEndPosition());
 
@@ -185,6 +184,9 @@ public class HighlightUtil {
                 endLine = it.getEndLine();
                 endColumn = it.getEndColumn();
 
+                int flag = it.getKind() == Diagnostic.Kind.ERROR ? Span.FLAG_ERROR :
+                        Span.FLAG_WARNING;
+                markProblemRegion(styles, flag, startLine, startColumn, endLine, endColumn);
             } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
                 if (BuildConfig.DEBUG) {
                     Log.d("HighlightUtil", "Failed to mark diagnostics", e);
@@ -193,7 +195,32 @@ public class HighlightUtil {
         });
     }
 
-    public static void clearDiagnostics(Styles styles) {
+    /**
+     * Used in xml diagnostics where line is only given
+     */
+    public static void setErrorSpan(Styles colors, int line) {
+        try {
+            Spans.Reader reader = colors.getSpans().read();
+            int realLine = line - 1;
+            List<io.github.rosemoe.sora.lang.styling.Span> spans = reader.getSpansOnLine(realLine);
 
+            for (io.github.rosemoe.sora.lang.styling.Span span : spans) {
+                span.problemFlags = Span.FLAG_ERROR;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            // ignored
+        }
+    }
+
+    public static void clearDiagnostics(Styles styles) {
+        Spans spans = styles.getSpans();
+        Spans.Reader read = spans.read();
+        for (int i = 0; i < spans.getLineCount(); i++) {
+            List<Span> spansOnLine = new ArrayList<>(read.getSpansOnLine(i));
+            for (Span span : spansOnLine) {
+                span.problemFlags = 0;
+            }
+            spans.modify().setSpansOnLine(i, spansOnLine);
+        }
     }
 }

@@ -9,7 +9,6 @@ import android.util.Log;
 import com.google.common.util.concurrent.AsyncCallable;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.tyron.common.TestUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,17 +36,12 @@ public class ProgressManager {
     }
 
     private final ExecutorService mPool = Executors.newFixedThreadPool(32);
-    private final HandlerInterface mMainHandler;
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private final Map<Thread, ProgressIndicator> mThreadToIndicator;
 
     public ProgressManager() {
         mThreadToIndicator = new WeakHashMap<>();
-        if (TestUtil.isDalvik()) {
-            mMainHandler = new DefaultHandlerInterface(new Handler(Looper.getMainLooper()));
-        } else {
-            mMainHandler = new MockHandler();
-        }
     }
 
     /**
@@ -82,7 +76,9 @@ public class ProgressManager {
         ProgressDialog dialog = new ProgressDialog(uiContext);
         dialog.show();
 
-        runAsync(runnable, i -> dialog.dismiss(), indicator);
+        runAsync(runnable, i -> {
+            dialog.dismiss();
+        }, indicator);
     }
 
     /**

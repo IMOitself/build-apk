@@ -213,6 +213,7 @@ private fun elementCompletionItems(
 ): ElementCompletionItems {
     ProgressManager.checkCanceled()
 
+
     val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(
         emptySequence(),
         true,

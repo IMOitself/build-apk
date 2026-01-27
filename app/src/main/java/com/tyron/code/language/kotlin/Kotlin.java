@@ -6,7 +6,6 @@ import com.tyron.editor.Editor;
 import java.io.File;
 
 public class Kotlin implements Language {
-
     @Override
     public boolean isApplicable(File ext) {
         return ext.getName().endsWith(".kt");

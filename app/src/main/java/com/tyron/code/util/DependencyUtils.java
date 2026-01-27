@@ -56,7 +56,7 @@ public class DependencyUtils {
      * Parses a build.gradle file and gets the dependencies out of it
      *
      * @param file input build.gradle file
-     * @return CodeAssistLibrary dependencies
+     * @return Library dependencies
      */
     public static List<Dependency> parseGradle(RepositoryManager repository, File file, ILogger logger) throws IOException {
         String readString = FileUtils.readFileToString(file, Charset.defaultCharset());

@@ -49,6 +49,7 @@ public class ProjectActionGroup extends ActionGroup {
 
     @Override
     public AnAction[] getChildren(@Nullable AnActionEvent e) {
-        return new AnAction[]{new SaveAction(), new RefreshProjectAction()};
+        return new AnAction[]{new SaveAction(), new RefreshProjectAction(),
+                new OpenLibraryManagerAction()};
     }
 }

@@ -1,66 +1,57 @@
 package com.tyron.code.language.kotlin;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.tyron.builder.BuildModule;
+import com.tyron.code.ApplicationLoader;
+import com.tyron.code.ui.editor.impl.text.rosemoe.CodeEditorView;
 import com.tyron.code.language.CompletionItemWrapper;
-import com.tyron.code.language.LanguageManager;
-import com.tyron.completion.DefaultInsertHandler;
-import com.tyron.completion.java.provider.JavaSortCategory;
+import com.tyron.code.analyzer.BaseTextmateAnalyzer;
 import com.tyron.completion.model.CompletionItem;
 import com.tyron.completion.model.CompletionList;
-import com.tyron.completion.util.CompletionUtils;
 import com.tyron.editor.Editor;
-import com.tyron.kotlin.completion.KotlinEnvironment;
-import com.tyron.kotlin.completion.KotlinFile;
 
-import java.io.File;
-import java.util.List;
-import java.util.Objects;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.Token;
+
+import java.io.InputStreamReader;
 
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
-import io.github.rosemoe.sora.lang.format.Formatter;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.text.TextUtils;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 public class KotlinLanguage implements Language {
 
-    private static final String GRAMMAR_NAME = "kotlin.tmLanguage";
-    private static final String LANGUAGE_PATH = "textmate/kotlin/syntaxes/kotlin.tmLanguage";
-    private static final String CONFIG_PATH = "textmate/kotlin/language-configuration.json";
-
-    private final TextMateLanguage delegate;
-    private final Editor editor;
-
-    private KotlinEnvironment kotlinEnvironment;
+    private final Editor mEditor;
+    private final KotlinAnalyzer mAnalyzer;
 
     public KotlinLanguage(Editor editor) {
-        this.editor = editor;
-        delegate = LanguageManager.createTextMateLanguage(GRAMMAR_NAME,
-                LANGUAGE_PATH,
-                CONFIG_PATH,
-                editor);
+        mEditor = editor;
+        AssetManager assetManager = ApplicationLoader.applicationContext.getAssets();
+        mAnalyzer = KotlinAnalyzer.create(editor);
     }
 
     @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
-        return delegate.getAnalyzeManager();
+        return mAnalyzer;
     }
 
     @Override
     public int getInterruptionLevel() {
-        return delegate.getInterruptionLevel();
+        return INTERRUPTION_LEVEL_SLIGHT;
     }
 
     @Override
@@ -68,56 +59,104 @@ public class KotlinLanguage implements Language {
                                     @NonNull CharPosition position,
                                     @NonNull CompletionPublisher publisher,
                                     @NonNull Bundle extraArguments) throws CompletionCancelledException {
-        String identifierPart = CompletionHelper.computePrefix(content, position, CompletionUtils.JAVA_PREDICATE::test);
-        KotlinAutoCompleteProvider provider =
-                new KotlinAutoCompleteProvider(editor);
-        CompletionList completionList = provider.getCompletionList(identifierPart,
-                position.getLine(),
-                position.getColumn());
-        if (completionList == null) {
+
+        // remove this when kotlin analysis is stable
+        if (true) {
             return;
         }
-        completionList.getItems().stream().map(CompletionItemWrapper::new).forEach(publisher::addItem);
+
+        char c = content.charAt(position.getIndex() - 1);
+        if (!isAutoCompleteChar(c)) {
+            return;
+        }
+        String prefix = CompletionHelper.computePrefix(content, position, this::isAutoCompleteChar);
+        KotlinAutoCompleteProvider provider = new KotlinAutoCompleteProvider(mEditor);
+        CompletionList list =
+                provider.getCompletionList(prefix, position.getLine(), position.getColumn());
+        if (list != null) {
+            for (CompletionItem item : list.items) {
+                CompletionItemWrapper wrapper = new CompletionItemWrapper(item);
+                publisher.addItem(wrapper);
+            }
+        }
     }
 
-    private KotlinEnvironment getOrCreateKotlinEnvironment() {
-        if (kotlinEnvironment == null) {
-            kotlinEnvironment =
-                    KotlinEnvironment.Companion.with(List.of(Objects.requireNonNull(BuildModule.getAndroidJar()),
-                            BuildModule.getLambdaStubs()));
-        }
-        return kotlinEnvironment;
+    public boolean isAutoCompleteChar(char p1) {
+        return p1 == '.' || MyCharacter.isJavaIdentifierPart(p1);
     }
 
     @Override
     public int getIndentAdvance(@NonNull ContentReference content, int line, int column) {
-        return delegate.getIndentAdvance(content, line, column);
+        String text = content.getLine(line)
+                .substring(0, column);
+        return getIndentAdvance(text);
+    }
+
+    public int getIndentAdvance(String p1) {
+        KotlinLexer lexer = new KotlinLexer(CharStreams.fromString(p1));
+        Token token;
+        int advance = 0;
+        while ((token = lexer.nextToken()) != null) {
+            if (token.getType() == KotlinLexer.EOF) {
+                break;
+            }
+            if (token.getType() == KotlinLexer.LCURL) {
+                advance++;
+                    /*case RBRACE:
+                     advance--;
+                     break;*/
+            }
+        }
+        advance = Math.max(0, advance);
+        return advance * 4;
     }
 
     @Override
     public boolean useTab() {
-        return delegate.useTab();
+        return true;
     }
 
-    @NonNull
     @Override
-    public Formatter getFormatter() {
-        return delegate.getFormatter();
+    public CharSequence format(CharSequence text) {
+        return text;
     }
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
-        return delegate.getSymbolPairs();
+        return new SymbolPairMatch.DefaultSymbolPairs();
     }
 
-    @Nullable
     @Override
     public NewlineHandler[] getNewlineHandlers() {
-        return new NewlineHandler[0];
+        return handlers;
     }
 
     @Override
     public void destroy() {
-        delegate.destroy();
+
+    }
+
+    private final NewlineHandler[] handlers = new NewlineHandler[]{new BraceHandler()};
+
+    class BraceHandler implements NewlineHandler {
+
+        @Override
+        public boolean matchesRequirement(String beforeText, String afterText) {
+            return beforeText.endsWith("{") && afterText.startsWith("}");
+        }
+
+        @Override
+        public NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize) {
+            int count = TextUtils.countLeadingSpaceCount(beforeText, tabSize);
+            int advanceBefore = getIndentAdvance(beforeText);
+            int advanceAfter = getIndentAdvance(afterText);
+            String text;
+            StringBuilder sb = new StringBuilder("\n").append(
+                    TextUtils.createIndent(count + advanceBefore, tabSize, useTab()))
+                    .append('\n')
+                    .append(text = TextUtils.createIndent(count + advanceAfter, tabSize, useTab()));
+            int shiftLeft = text.length() + 1;
+            return new NewlineHandleResult(sb, shiftLeft);
+        }
     }
 }

@@ -19,7 +19,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -43,7 +42,7 @@ public class MemberSelectCompletionProvider extends BaseCompletionProvider {
     }
 
     @Override
-    public void complete(CompletionList.Builder builder, JavacUtilitiesProvider task, TreePath path,
+    public void complete(CompletionList.Builder builder, CompileTask task, TreePath path,
                          String partial, boolean endsWithParen) {
         checkCanceled();
 
@@ -68,7 +67,7 @@ public class MemberSelectCompletionProvider extends BaseCompletionProvider {
                                                     partial, endsWithParen);
         } else if (type instanceof DeclaredType) {
             completeDeclaredTypeMemberSelect(builder, task, scope, (DeclaredType) type, isStatic,
-                    partial, endsWithParen);
+                                                                                       partial, endsWithParen);
         } else if (type instanceof PrimitiveType) {
             if (path.getLeaf()
                         .getKind() != Tree.Kind.METHOD_INVOCATION) {
@@ -79,7 +78,7 @@ public class MemberSelectCompletionProvider extends BaseCompletionProvider {
     }
 
 
-    private void completePrimitiveMemberSelect(CompletionList.Builder builder, JavacUtilitiesProvider task, Scope scope,
+    private void completePrimitiveMemberSelect(CompletionList.Builder builder, CompileTask task, Scope scope,
                                                          PrimitiveType type, boolean isStatic,
                                                          String partial, boolean endsWithParen) {
         checkCanceled();
@@ -94,7 +93,7 @@ public class MemberSelectCompletionProvider extends BaseCompletionProvider {
     }
 
     private void completeTypeVariableMemberSelect(CompletionList.Builder builder,
-                                                  JavacUtilitiesProvider task, Scope scope,
+                                                  CompileTask task, Scope scope,
                                                   TypeVariable type, boolean isStatic,
                                                   String partial, boolean endsWithParen) {
         checkCanceled();
@@ -110,13 +109,14 @@ public class MemberSelectCompletionProvider extends BaseCompletionProvider {
         }
     }
 
-    private void completeDeclaredTypeMemberSelect(CompletionList.Builder builder, JavacUtilitiesProvider task, Scope scope, DeclaredType type, boolean isStatic, String partial, boolean endsWithParen) {
+    private void completeDeclaredTypeMemberSelect(CompletionList.Builder builder, CompileTask task, Scope scope, DeclaredType type, boolean isStatic, String partial, boolean endsWithParen) {
         checkCanceled();
-        Trees trees = task.getTrees();
+        Trees trees = Trees.instance(task.task);
         TypeElement typeElement = (TypeElement) type.asElement();
 
         HashMap<String, List<ExecutableElement>> methods = new HashMap<>();
-        for (Element member : task.getElements().getAllMembers(typeElement)) {
+        for (Element member : task.task.getElements()
+                .getAllMembers(typeElement)) {
             checkCanceled();
 
             if (builder.getItemCount() >= Completions.MAX_COMPLETION_ITEMS) {

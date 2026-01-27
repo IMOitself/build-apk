@@ -16,8 +16,8 @@ android {
     }
     compileOptions {
         coreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     testOptions {
@@ -47,29 +47,14 @@ android {
         exclude ".api_description"
         exclude "about_files/*"
         exclude "META-INF/eclipse.inf"
-        exclude "META-INF/INDEX.LIST"
-        exclude "META-INF/DEPENDENCIES"
-        exclude "META-INF/LGPL2.1"
-        exclude "META-INF/groovy-release-info.properties"
-        exclude "META-INF/AL2.0"
-        exclude "README.md"
-        pickFirst "META-INF/sisu/*"
-        pickFirst "*/*.kotlin_builtins"
-        pickFirst "*/*/*.kotlin_builtins"
-        pickFirst "*/*/*/*.kotlin_builtins"
     }
 }
 
 configurations.implementation {
     exclude group: "org.jetbrains", module: "annotations"
-    exclude group: 'com.android.tools', module: 'common'
-    exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
 }
 
 dependencies {
-    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
-    implementation projects.terminalview
-
     // TODO: Removed these modules, the features that are using these modules
     // should be moved into its own module.
 
@@ -81,45 +66,16 @@ dependencies {
     )
 
     // TODO: completion providers should not be included on the main module
-    // alternate editor impl
-    implementation 'com.blacksquircle.ui:editorkit:2.1.2'
-
     implementation project(path: ':code-editor')
     implementation project(path: ':xml-completion')
     implementation project(path: ':build-tools:viewbinding-inject')
     implementation project(path: ':build-tools:xml-repository')
     implementation project(path: ':java-completion')
-    implementation projects.eventManager
     // not used for compilation, but for analysis
     implementation project(path: ':build-tools:javac')
 
     implementation project(path: ':language-api')
 
-    // groovy support
-    implementation projects.buildTools.builderBaseServicesGroovy
-
-    implementation projects.buildTools.builderLauncher
-    implementation projects.buildTools.builderBaseServices
-    implementation projects.buildTools.builderCore
-    implementation projects.buildTools.builderCoreApi
-    implementation projects.buildTools.builderLogging
-    implementation projects.buildTools.builderLauncher
-    implementation projects.buildTools.builderToolingApiBuilders
-    implementation projects.buildTools.builderBuildOperations
-    implementation projects.buildTools.builderLogging
-    implementation projects.buildTools.builderEnterpriseWorkers
-    implementation projects.buildTools.builderConfigurationCache
-    implementation projects.buildTools.builderPlugins
-    implementation projects.buildTools.builderJava
-    implementation projects.buildTools.builderNative
-    implementation project(path: ":build-tools:codeassist-builder-plugin")
-    implementation projects.buildTools.builderIde
-    implementation projects.buildTools.builderToolingApi
-    // emulating console
-    implementation 'org.fusesource.jansi:jansi:2.4.0'
-
-    implementation project(path: ':build-tools:builder-api')
-    implementation project(path: ':build-tools:builder-java')
     implementation project(path: ':build-tools:build-logic')
     implementation project(path: ':build-tools:manifmerger')
     implementation project(path: ':build-tools:project')
@@ -130,10 +86,7 @@ dependencies {
     implementation project(path: ':build-tools:lint')
     implementation project(path: ':layout-preview')
     implementation project(path: ':kotlin-completion')
-
-    // Virtual File System
-    implementation 'org.apache.commons:commons-vfs2:2.9.0'
-
+    
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation project(path: ':dependency-resolver')
 
@@ -174,10 +127,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.0'
     implementation 'com.github.TutorialsAndroid:crashx:v6.0.19'
     implementation project(path: ':eclipse-formatter')
-    implementation project(path: ':build-tools:builder-core')
 
-
-    runtimeOnly projects.javaStubs
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 
     // testing

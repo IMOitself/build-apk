@@ -26,14 +26,9 @@ public class ImageEditor implements FileEditor {
         return ImageEditorFragment.newInstance(file);
     }
 
-//    @Override
-//    public Fragment getFragment() {
-//        return mFragment;
-//    }
-
     @Override
-    public View getView() {
-        return null;
+    public Fragment getFragment() {
+        return mFragment;
     }
 
     @Override

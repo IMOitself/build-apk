@@ -1,7 +1,5 @@
 package com.tyron.fileeditor.api;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import java.io.File;
@@ -23,7 +21,7 @@ public interface FileEditorProvider {
      * @return the created editor for this file, never null.
      */
     @NonNull
-    FileEditor createEditor(@NonNull Context context, @NonNull File file);
+    FileEditor createEditor(@NonNull File file);
 
     /**
      * @return a unique id representing this file editor among others

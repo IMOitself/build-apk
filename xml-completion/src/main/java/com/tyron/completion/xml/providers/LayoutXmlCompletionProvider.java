@@ -67,6 +67,7 @@ public class LayoutXmlCompletionProvider extends CompletionProvider {
             DOMDocument parsed = DOMParser.getInstance()
                     .parse(contents, namespace.getXmlNamespaceUri(),
                            new URIResolverExtensionManager());
+            DOMNode node = parsed.findNodeAt((int) params.getIndex());
 
             XmlCompletionType completionType =
                     XmlUtils.getCompletionType(parsed, params.getIndex());

@@ -5,8 +5,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import org.apache.commons.vfs2.FileObject;
-
 import java.io.File;
 
 /**
@@ -17,7 +15,7 @@ public interface FileEditor {
     /**
      * @return the fragment which represents the editor in UI
      */
-    View getView();
+    Fragment getFragment();
 
     /**
      * @return the view to be focused when this editor has been selected.

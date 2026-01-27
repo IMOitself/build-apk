@@ -31,8 +31,4 @@ public interface AndroidModule extends JavaModule, KotlinModule {
     Map<String, File> getResourceClasses();
 
     void addResourceClass(@NonNull File file);
-
-    default String getNamespace() {
-        throw new UnsupportedOperationException();
-    }
 }

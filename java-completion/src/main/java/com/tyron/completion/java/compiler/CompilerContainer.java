@@ -4,13 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.GuardedBy;
 
-import com.sun.source.util.JavacTask;
-import com.sun.tools.javac.api.JavacTaskImpl;
-import com.sun.tools.javac.util.Context;
 import com.tyron.completion.java.BuildConfig;
-import com.tyron.completion.java.compiler.services.CancelService;
 import com.tyron.completion.progress.ProcessCanceledException;
-import com.tyron.completion.progress.ProgressManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,32 +34,12 @@ public class CompilerContainer {
 
     private volatile boolean mIsWriting;
 
-    private static final Semaphore semaphore = new Semaphore(1);
+    private final Semaphore semaphore = new Semaphore(1);
 
-    private volatile CompileTask mCompileTask;
+    private CompileTask mCompileTask;
 
     public CompilerContainer() {
-        System.out.println("New instance created - CompilerContainer");
-    }
 
-    private void cancel() {
-        if (mCompileTask == null) {
-            return;
-        }
-
-        JavacTask task = mCompileTask.task;
-        if (!(task instanceof JavacTaskImpl)) {
-            return;
-        }
-
-        JavacTaskImpl taskImpl = ((JavacTaskImpl) task);
-        Context context = taskImpl.getContext();
-        if (context == null) {
-            return;
-        }
-
-        ReusableCompiler.CancelServiceImpl cancelService =
-                (ReusableCompiler.CancelServiceImpl) ReusableCompiler.CancelServiceImpl.instance(context);
     }
 
     /**
@@ -73,43 +48,28 @@ public class CompilerContainer {
      * are synchronized
      */
     public void run(Consumer<CompileTask> consumer) {
-        cancel();
         semaphore.acquireUninterruptibly();
         try {
             consumer.accept(mCompileTask);
         } finally {
-            mCompileTask.close();
             semaphore.release();
         }
     }
 
     public <T> T get(Function1<CompileTask, T> fun) {
-        cancel();
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            throw new ProcessCanceledException();
-        }
-
+        semaphore.acquireUninterruptibly();
         try {
             return fun.invoke(mCompileTask);
         } finally {
-            mCompileTask.close();
             semaphore.release();
         }
     }
 
     public <T> T getWithLock(Function1<CompileTask, T> fun) {
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            throw new ProcessCanceledException();
-        }
-
+        semaphore.acquireUninterruptibly();
         try {
             return fun.invoke(mCompileTask);
         } finally {
-            mCompileTask.close();
             semaphore.release();
         }
 
@@ -120,20 +80,13 @@ public class CompilerContainer {
     }
 
     void initialize(Runnable runnable) {
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            throw new ProcessCanceledException();
-        }
+        semaphore.acquireUninterruptibly();
         mIsWriting = true;
         try {
             // ensure that compile task is closed
             if (mCompileTask != null) {
                 mCompileTask.close();
             }
-
-            cancel();
-
             runnable.run();
         } finally {
             mIsWriting = false;
@@ -143,11 +96,5 @@ public class CompilerContainer {
 
     void setCompileTask(CompileTask task) {
         mCompileTask = task;
-    }
-
-    private static void assertNotClosed(CompileTask task) {
-        if (task.isClosed()) {
-            throw new RuntimeException("Compile task is already closed.");
-        }
     }
 }

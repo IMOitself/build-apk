@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -129,22 +128,11 @@ public class AndroidUtilities {
 	}
 
 	public static void showSimpleAlert(Context context, String title, String message) {
-		showSimpleAlert(context, title, message, context.getString(android.R.string.ok), null, null, null);
-	}
-
-	public static void showSimpleAlert(Context context, String title, String message, String positive, String neutral, String negative, DialogInterface.OnClickListener lsitener) {
-		MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context).setTitle(title)
-						.setMessage(message);
-		if (positive != null) {
-			builder.setPositiveButton(positive, lsitener);
-		}
-		if (neutral != null) {
-			builder.setNeutralButton(neutral, lsitener);
-		}
-		if (negative != null) {
-			builder.setNegativeButton(negative, lsitener);
-		}
-		builder.show();
+		new MaterialAlertDialogBuilder(context)
+				.setTitle(title)
+				.setMessage(message)
+				.setPositiveButton(android.R.string.ok, null)
+				.show();
 	}
 
 	public static void copyToClipboard(String text) {

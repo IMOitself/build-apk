@@ -4,7 +4,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.*
 import com.tyron.common.util.AndroidUtilities
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 val Int.dp: Int
     get() = AndroidUtilities.dpToPx(this.toFloat())
@@ -63,8 +62,4 @@ fun View.addSystemWindowInsetToMargin(
         }
         windowInsets
     }
-}
-
-fun View.removeFromParent() {
-    parent?.cast<ViewGroup>()?.removeView(this)
 }

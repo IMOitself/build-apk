@@ -2,34 +2,40 @@ package com.tyron.completion.xml.task;
 
 import androidx.annotation.NonNull;
 
-import com.android.ide.common.rendering.api.AttrResourceValue;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.rendering.api.StyleableResourceValue;
-import com.android.ide.common.resources.ResourceItem;
-import com.android.resources.ResourceType;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Table;
+import com.tyron.builder.compiler.incremental.resource.IncrementalAapt2Task;
+import com.tyron.builder.compiler.manifest.resources.ResourceType;
 import com.tyron.builder.compiler.symbol.SymbolLoader;
 import com.tyron.builder.compiler.symbol.SymbolWriter;
 import com.tyron.builder.model.SourceFileObject;
 import com.tyron.builder.project.Project;
 import com.tyron.builder.project.api.AndroidModule;
-import com.tyron.completion.java.parse.CompilationInfo;
+import com.tyron.builder.project.api.FileManager;
+import com.tyron.builder.project.api.JavaModule;
+import com.tyron.completion.java.JavaCompilerProvider;
+import com.tyron.completion.java.compiler.JavaCompilerService;
 import com.tyron.completion.xml.XmlRepository;
-import com.tyron.completion.xml.v2.project.LocalResourceRepository;
-import com.tyron.completion.xml.v2.project.ResourceRepositoryManager;
+import com.tyron.xml.completion.repository.ResourceItem;
+import com.tyron.xml.completion.repository.ResourceRepository;
+import com.tyron.xml.completion.repository.api.AttrResourceValue;
+import com.tyron.xml.completion.repository.api.ResourceNamespace;
+import com.tyron.xml.completion.repository.api.StyleableResourceValue;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Used to create fake R.java files from the project resources for it to
@@ -39,18 +45,13 @@ import java.util.function.Consumer;
  */
 public class InjectResourcesTask {
 
-    public static void inject(@NonNull Project project) {
-        try {
-            inject(project, (AndroidModule) project.getMainModule());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    public static void inject(@NonNull Project project) throws IOException {
+        inject(project, (AndroidModule) project.getMainModule());
     }
 
-    public static void inject(@NonNull Project project,
-                              @NonNull AndroidModule module) throws IOException {
-        CompilationInfo compilationInfo = CompilationInfo.get(module);
-        if (compilationInfo == null) {
+    public static void inject(@NonNull Project project, @NonNull AndroidModule module) throws IOException {
+        JavaCompilerService service = JavaCompilerProvider.get(project, module);
+        if (service == null) {
             return;
         }
 
@@ -61,10 +62,9 @@ public class InjectResourcesTask {
             }
             SourceFileObject sourceFileObject =
                     new SourceFileObject(resourceFile.toPath(), module, Instant.now());
-            compilationInfo.update(sourceFileObject);
+            service.compile(Collections.singletonList(sourceFileObject));
         });
     }
-
     private final AndroidModule mModule;
     private final Project mProject;
 
@@ -74,52 +74,66 @@ public class InjectResourcesTask {
     }
 
     public void inject(Consumer<File> consumer) throws IOException {
-        ResourceRepositoryManager instance = ResourceRepositoryManager.getInstance(mModule);
-        LocalResourceRepository appResources = instance.getAppResources();
+        XmlRepository xmlRepository = XmlRepository.getRepository(mProject, mModule);
 
-        String classContents = createSymbols(appResources);
+        updateSymbols(xmlRepository);
+
+        String classContents = createSymbols(xmlRepository);
 
         File classFile = getOrCreateResourceClass(mModule);
 
         FileUtils.writeStringToFile(classFile, classContents, StandardCharsets.UTF_8);
+        mModule.addInjectedClass(classFile);
 
         consumer.accept(classFile);
     }
 
+    private void updateSymbols(XmlRepository xmlRepository) throws IOException {
+        Map<String, List<File>> files = IncrementalAapt2Task
+                .getFiles(mModule, IncrementalAapt2Task.getOutputDirectory(mModule));
+        List<File> allFiles = files.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        allFiles.forEach(it -> {
+            ResourceRepository repository = xmlRepository.getRepository();
+            try {
+                FileManager fileManager = mModule.getFileManager();
+                CharSequence contents = null;
+                if (fileManager.isOpened(it)) {
+                    Optional<CharSequence> fileContent = fileManager.getFileContent(it);
+                    if (fileContent.isPresent()) {
+                        contents = fileContent.get();
+                    }
+                } else {
+                    contents = FileUtils.readFileToString(it, StandardCharsets.UTF_8);
+                }
+                repository.updateFile(it, contents.toString());
+            } catch (IOException e) {
+                // ignored
+            }
+        });
+    }
 
-    private String createSymbols(LocalResourceRepository repository) throws IOException {
-
+    private String createSymbols(XmlRepository xmlRepository) throws IOException {
+        ResourceRepository repository = xmlRepository.getRepository();
+        List<ResourceType> resourceTypes = repository.getResourceTypes();
         int id = 0;
 
         Table<String, String, SymbolLoader.SymbolEntry> symbols = HashBasedTable.create();
-
-
-        Set<com.android.ide.common.rendering.api.ResourceNamespace> namespaces =
-                repository.getNamespaces();
-        for (com.android.ide.common.rendering.api.ResourceNamespace namespace : namespaces) {
-            Set<ResourceType> resourceTypes = repository.getResourceTypes(namespace);
-            for (ResourceType resourceType : resourceTypes) {
-                if (!resourceType.getCanBeReferenced() && resourceType != ResourceType.STYLEABLE) {
-                    continue;
-                }
-
-                ListMultimap<String, ResourceItem> resources =
-                        repository.getResources(namespace, resourceType);
-
-                if (resources.values().isEmpty()) {
-                    continue;
-                }
-                for (Map.Entry<String, ResourceItem> resourceItemEntry : resources.entries()) {
-                    addResource(id,
-                            namespace,
-                            symbols,
-                            resourceType,
-                            resourceItemEntry);
-                    id++;
-                }
-
+        for (ResourceType resourceType : resourceTypes) {
+            if (!resourceType.getCanBeReferenced() && resourceType != ResourceType.STYLEABLE) {
+                continue;
             }
-
+            ListMultimap<String, ResourceItem> resources =
+                    repository.getResources(repository.getNamespace(), resourceType);
+            if (resources.values()
+                    .isEmpty()) {
+                continue;
+            }
+            for (Map.Entry<String, ResourceItem> resourceItemEntry : resources.entries()) {
+                addResource(id, repository.getNamespace(), symbols, resourceType,
+                            resourceItemEntry);
+                id++;
+            }
         }
 
         SymbolLoader loader = new SymbolLoader(symbols);
@@ -139,9 +153,9 @@ public class InjectResourcesTask {
         }
         ResourceItem value = resourceItemEntry.getValue();
         String replacedName = convertName(value.getName());
-        SymbolLoader.SymbolEntry entry = new SymbolLoader.SymbolEntry(replacedName,
-                getType(resourceType),
-                String.valueOf(id));
+        SymbolLoader.SymbolEntry entry =
+                new SymbolLoader.SymbolEntry(replacedName, getType(resourceType),
+                                             String.valueOf(id));
         symbols.put(resourceType.getName(), replacedName, entry);
     }
 
@@ -154,7 +168,10 @@ public class InjectResourcesTask {
             return;
         }
         StyleableResourceValue styleable = ((StyleableResourceValue) value.getResourceValue());
-        String valueItem = "new int[" + styleable.getAllAttributes().size() + "];";
+        String valueItem = "new int[" +
+                           styleable.getAllAttributes()
+                                   .size() +
+                           "];";
         String replacedName = convertName(value.getName());
         SymbolLoader.SymbolEntry entry =
                 new SymbolLoader.SymbolEntry(replacedName, "int[]", valueItem);
@@ -168,7 +185,8 @@ public class InjectResourcesTask {
 
             String replace = name.replace(':', '_');
             String attrName = replacedName + (replace.isEmpty() ? "" : "_" + replace);
-            SymbolLoader.SymbolEntry attrEntry = new SymbolLoader.SymbolEntry(attrName, "int", "0");
+            SymbolLoader.SymbolEntry attrEntry =
+                    new SymbolLoader.SymbolEntry(attrName, "int", "0");
             symbols.put(ResourceType.STYLEABLE.getName(), attrName, attrEntry);
         }
     }

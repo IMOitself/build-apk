@@ -26,10 +26,9 @@
             app:tabInlineLabel="true"
             app:tabMode="scrollable"
             app:tabGravity="start"
-            android:visibility="gone"
             app:tabTextAppearance="@style/TabLayoutText" />
 
-        <FrameLayout
+        <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewpager"
             android:layout_width="match_parent"
             android:layout_height="0dp"

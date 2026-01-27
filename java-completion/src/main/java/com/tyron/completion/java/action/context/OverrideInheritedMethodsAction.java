@@ -42,6 +42,7 @@ import com.tyron.completion.java.rewrite.OverrideInheritedMethod;
 import com.tyron.completion.java.util.CompletionItemFactory;
 import com.tyron.completion.java.util.PrintHelper;
 import com.tyron.completion.model.DrawableKind;
+import com.tyron.completion.progress.ProgressIndicator;
 import com.tyron.completion.progress.ProgressManager;
 import com.tyron.completion.util.RewriteUtil;
 import com.tyron.editor.Editor;

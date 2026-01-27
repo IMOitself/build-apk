@@ -1,9 +1,5 @@
 package com.tyron.editor;
 
-import com.tyron.editor.event.ContentListener;
-
-import org.jetbrains.annotations.NotNull;
-
 public interface Content extends CharSequence {
 
     /**
@@ -40,15 +36,4 @@ public interface Content extends CharSequence {
 
     void replace(int start, int end, CharSequence text);
 
-    void setData(String key, Object object);
-
-    Object getData(String key);
-
-    void addContentListener(@NotNull ContentListener listener);
-
-    void removeContentListener(@NotNull ContentListener listener);
-
-    void setModificationStamp(long stamp);
-
-    long getModificationStamp();
 }
