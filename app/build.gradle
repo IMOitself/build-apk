@@ -47,11 +47,35 @@ android {
         exclude ".api_description"
         exclude "about_files/*"
         exclude "META-INF/eclipse.inf"
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'module-info.class'
     }
 }
 
 configurations.implementation {
     exclude group: "org.jetbrains", module: "annotations"
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.eclipse.platform:org.eclipse.core.runtime:3.19.0'
+        force 'org.eclipse.platform:org.eclipse.core.resources:3.13.700'
+        force 'org.eclipse.platform:org.eclipse.text:3.10.200'
+        force 'org.eclipse.platform:org.eclipse.core.filesystem:1.7.700'
+        
+        // Also force transitive dependencies that might be pulling in newer stuff
+        force 'org.eclipse.platform:org.eclipse.equinox.common:3.13.0'
+        force 'org.eclipse.platform:org.eclipse.equinox.preferences:3.8.0'
+        force 'org.eclipse.platform:org.eclipse.core.jobs:3.10.800'
+        force 'org.eclipse.platform:org.eclipse.core.contenttype:3.7.800'
+        force 'org.eclipse.platform:org.eclipse.equinox.app:1.5.0'
+        force 'org.eclipse.platform:org.eclipse.osgi:3.16.0'
+        force 'org.eclipse.platform:org.eclipse.core.expressions:3.7.0'
+        force 'org.eclipse.platform:org.eclipse.equinox.registry:3.9.0'
+        force 'org.eclipse.platform:org.eclipse.core.commands:3.9.700'
+    }
 }
 
 dependencies {
