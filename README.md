@@ -30,7 +30,7 @@ $env:JAVA_HOME="$PWD\temp_build\jdk\jdk-11.0.29+7"
 ```
 <br><br>
 ### Output
-The built APK will be located at the root directory of the repository:
+The built APK will be located at the root of this repository:
 ```
 app-release.apk
 ```
