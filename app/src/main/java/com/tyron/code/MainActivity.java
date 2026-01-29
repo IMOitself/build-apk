@@ -16,6 +16,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.main);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
+        String receivedString = getIntent().getStringExtra("project_path");
+        //adb shell am start -n com.tyron.code/.MainActivity -a imo.buildapk.RECEIVE_PROJECT_PATH --es project_path "/path/to/project"
+        if (receivedString != null) {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Received project_path")
+                    .setMessage(receivedString)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+        }
+
         if (getSupportFragmentManager().findFragmentByTag(ProjectManagerFragment.TAG) == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new ProjectManagerFragment(),

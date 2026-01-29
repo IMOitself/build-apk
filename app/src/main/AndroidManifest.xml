@@ -41,6 +41,11 @@ android:supportsRtl="true"
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="imo.buildapk.RECEIVE_PROJECT_PATH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <service android:name=".service.CompilerService" />
