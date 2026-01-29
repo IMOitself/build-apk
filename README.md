@@ -28,9 +28,14 @@ once you have `temp_build\gradle` and `temp_build\jdk` after doing the code abov
 $env:JAVA_HOME="$PWD\temp_build\jdk\jdk-11.0.29+7"
 & "$PWD\temp_build\gradle\gradle-7.0.2\bin\gradle.bat" assembleDebug
 ```
-
+<br><br>
 ### Output
-The built APK will be located at:
+The built APK will be located at the root directory of the repository:
 ```
-app\build\outputs\apk\debug\app-debug.apk
+app-release.apk
 ```
+or 
+```
+app-debug.apk
+```
+

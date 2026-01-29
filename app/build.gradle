@@ -52,6 +52,12 @@ android {
         exclude 'META-INF/*.RSA'
         exclude 'module-info.class'
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "../../../../../app-${variant.name}.apk"
+        }
+    }
 }
 
 configurations.implementation {
